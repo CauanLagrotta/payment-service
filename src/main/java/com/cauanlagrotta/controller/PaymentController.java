@@ -3,6 +3,7 @@ package com.cauanlagrotta.controller;
 import com.cauanlagrotta.domain.PaymentMethod;
 import com.cauanlagrotta.dto.BookingDTO;
 import com.cauanlagrotta.dto.UserDTO;
+import com.cauanlagrotta.model.PaymentOrder;
 import com.cauanlagrotta.payload.response.PaymentLinkResponse;
 import com.cauanlagrotta.service.PaymentService;
 import com.razorpay.RazorpayException;
@@ -26,6 +27,22 @@ public class PaymentController {
     user.setId(1L);
 
     PaymentLinkResponse res = paymentService.createOrder(user, booking, paymentMethod);
+    return ResponseEntity.ok(res);
+  }
+
+  @PostMapping("/{paymentOrderId}")
+  public ResponseEntity<PaymentOrder> getPaymentOrderById(@PathVariable Long paymentOrderId) {
+
+    PaymentOrder res = paymentService.getPaymentOrderById(paymentOrderId);
+    return ResponseEntity.ok(res);
+  }
+
+  @PostMapping("/proceed")
+  public ResponseEntity<Boolean> proceedPayment(@RequestParam String paymentId, @RequestParam String paymentLinkId) throws RazorpayException {
+
+    PaymentOrder paymentOrder = paymentService.getPaymentOrderByPaymentId(paymentLinkId);
+
+    Boolean res = paymentService.proceedPayment(paymentOrder, paymentId, paymentLinkId);
     return ResponseEntity.ok(res);
   }
 }
