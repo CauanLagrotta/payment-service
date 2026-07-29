@@ -1,12 +1,14 @@
 package com.cauanlagrotta.service.impl;
 
 import com.cauanlagrotta.domain.PaymentMethod;
+import com.cauanlagrotta.domain.PaymentOrderStatus;
 import com.cauanlagrotta.dto.BookingDTO;
 import com.cauanlagrotta.dto.UserDTO;
 import com.cauanlagrotta.model.PaymentOrder;
 import com.cauanlagrotta.payload.response.PaymentLinkResponse;
 import com.cauanlagrotta.repository.PaymentOrderRepository;
 import com.cauanlagrotta.service.PaymentService;
+import com.razorpay.Payment;
 import com.razorpay.PaymentLink;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
@@ -157,5 +159,37 @@ public class PaymentServiceImpl implements PaymentService {
     Session session = Session.create(params);
 
     return session.getUrl();
+  }
+
+  @Override
+  public Boolean proceedPayment(PaymentOrder paymentOrder, String paymentId, String paymentLinkId) throws RazorpayException {
+
+    if(paymentOrder.getStatus().equals(PaymentOrderStatus.PENDING)){
+
+      if(paymentOrder.getPaymentMethod().equals(PaymentMethod.RAZORPAY)){
+
+        RazorpayClient razorpay = new RazorpayClient(razorpayApiKey, razorpayApiSecret);
+
+        Payment payment = razorpay.payments.fetch(paymentId);
+        Integer amount = payment.get("amount");
+        String status = payment.get("status");
+
+        if(status.equals("captured")){
+          paymentOrder.setStatus(PaymentOrderStatus.SUCCESS);
+          paymentOrderRepository.save(paymentOrder);
+          return true;
+        }
+
+        return false;
+
+      }else {
+        paymentOrder.setStatus(PaymentOrderStatus.SUCCESS);
+        paymentOrderRepository.save(paymentOrder);
+        return true;
+      }
+
+    }
+
+    return false;
   }
 }
