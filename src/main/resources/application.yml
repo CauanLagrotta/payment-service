@@ -27,6 +27,17 @@ eureka:
 server:
   port: 5006
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+
 stripe:
   api:
     key: ${STRIPE_API_KEY:}
